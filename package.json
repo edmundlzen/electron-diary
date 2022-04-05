@@ -231,6 +231,17 @@
 		"webpack-merge": "^5.8.0"
 	},
 	"dependencies": {
+		"@mantine/core": "^4.1.2",
+		"@mantine/dates": "^4.1.2",
+		"@mantine/dropzone": "^4.1.2",
+		"@mantine/form": "^4.1.2",
+		"@mantine/hooks": "^4.1.2",
+		"@mantine/modals": "^4.1.2",
+		"@mantine/next": "^4.1.2",
+		"@mantine/notifications": "^4.1.2",
+		"@mantine/prism": "^4.1.2",
+		"@mantine/rte": "^4.1.2",
+		"dayjs": "^1.11.0",
 		"electron-debug": "^3.2.0",
 		"electron-log": "^4.4.6",
 		"electron-updater": "^4.6.5",
