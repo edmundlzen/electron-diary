@@ -12,8 +12,11 @@ import path from 'path';
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
+import * as remoteMain from '@electron/remote/main';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
+
+remoteMain.initialize();
 
 export default class AppUpdater {
 	constructor() {
@@ -79,6 +82,8 @@ const createWindow = async () => {
 			contextIsolation: false,
 		},
 	});
+
+	remoteMain.enable(mainWindow.webContents);
 
 	mainWindow.loadURL(resolveHtmlPath('index.html'));
 

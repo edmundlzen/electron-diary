@@ -1,6 +1,7 @@
 import { Button, Group, PasswordInput, Text } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import Cryptr from 'cryptr';
 import fs from 'fs';
 
 export const dropzoneChildren = () => (
@@ -30,11 +31,7 @@ export default function Auth() {
 			fs.readFile(dataFilePath, 'utf-8', (err, data) => {
 				if (err) {
 					console.error(err);
-					return;
 				}
-
-				const dataObj = JSON.parse(data);
-				console.log(dataObj);
 			});
 		}
 	}, [dataFilePath]);
@@ -48,17 +45,33 @@ export default function Auth() {
 			>
 				Data settings
 			</Button>
-			<div className="flex items-center justify-center flex-1">
+			<div className="flex flex-col items-center justify-center flex-1">
 				<div className="flex w-96 items-end space-x-4">
 					<PasswordInput
 						placeholder="Password"
 						label="Password"
 						required
 						className="flex-1"
+						disabled={!dataFilePath}
 					/>
-					<Button variant="outline" color="green">
+					<Button
+						variant="outline"
+						color="green"
+						disabled={!dataFilePath}
+					>
 						Unlock
 					</Button>
+				</div>
+				<div className="w-96">
+					<Text
+						className={`text-red-500 text-sm${
+							dataFilePath ? ' hidden' : ''
+						}`}
+					>
+						Please select your data file or create a new one by
+						clicking on the &quot;Data settings&quot; button on the
+						top left of the screen.
+					</Text>
 				</div>
 			</div>
 		</div>
