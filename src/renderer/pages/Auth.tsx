@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import Cryptr from 'cryptr';
 import fs from 'fs';
+import { showNotification } from '@mantine/notifications';
+import { Icon } from '@iconify/react';
 
 export const dropzoneChildren = () => (
 	<Group
@@ -20,6 +22,8 @@ export const dropzoneChildren = () => (
 
 export default function Auth() {
 	const [dataFilePath, setDataFilePath] = useState<string | null>(null);
+	const [dataFileContent, setDataFileContent] = useState<string | null>(null);
+	const [password, setPassword] = useState<string>('');
 	const navigate = useNavigate();
 
 	useEffect(() => {
@@ -31,10 +35,34 @@ export default function Auth() {
 			fs.readFile(dataFilePath, 'utf-8', (err, data) => {
 				if (err) {
 					console.error(err);
+				} else {
+					setDataFileContent(data);
 				}
 			});
 		}
 	}, [dataFilePath]);
+
+	function handleUnlockButtonClick() {
+		if (dataFileContent) {
+			try {
+				const cryptr = new Cryptr(password);
+				const decryptedString = cryptr.decrypt(dataFileContent);
+				const decryptedStringJson = JSON.parse(decryptedString);
+				if (decryptedStringJson.verification !== 'verify_me') {
+					throw new Error('Invalid password');
+				}
+			} catch (e) {
+				showNotification({
+					autoClose: 5000,
+					title: 'Incorrect password',
+					message: `Please try again.`,
+					color: 'red',
+					icon: <Icon icon="carbon:warning-alt" />,
+					loading: false,
+				});
+			}
+		}
+	}
 
 	return (
 		<div className="h-screen w-screen flex flex-col">
@@ -53,11 +81,14 @@ export default function Auth() {
 						required
 						className="flex-1"
 						disabled={!dataFilePath}
+						value={password}
+						onChange={(e) => setPassword(e.target.value)}
 					/>
 					<Button
 						variant="outline"
 						color="green"
 						disabled={!dataFilePath}
+						onClick={() => handleUnlockButtonClick()}
 					>
 						Unlock
 					</Button>

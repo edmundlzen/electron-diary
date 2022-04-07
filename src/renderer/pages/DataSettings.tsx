@@ -1,13 +1,18 @@
 import { Dropzone } from '@mantine/dropzone';
-import { Button, Group, PasswordInput, Text, TextInput } from '@mantine/core';
+import {
+	Button,
+	Group,
+	PasswordInput,
+	Text,
+	TextInput,
+	Modal,
+} from '@mantine/core';
 import { useEffect, useRef, useState } from 'react';
 import { showNotification } from '@mantine/notifications';
 import { Icon } from '@iconify/react';
 import { useNavigate } from 'react-router-dom';
 import fs from 'fs';
-// @ts-ignore
 import Cryptr from 'cryptr';
-import { useModals } from '@mantine/modals';
 
 const { dialog } = require('@electron/remote');
 
@@ -40,10 +45,9 @@ export default function DataSettings() {
 	const [fileName, setFileName] = useState<string | null>(null);
 	const [filePath, setFilePath] = useState<string | null>(null);
 	const [newDataFilePath, setNewDataFilePath] = useState<string | null>(null);
-	const [newDataFileName, setNewDataFileName] = useState<string | undefined>(
-		undefined
-	);
-	const [password, setPassword] = useState<string | undefined>(undefined);
+	const [newDataFileName, setNewDataFileName] = useState('');
+	const [password, setPassword] = useState('');
+	const [newDataFileModalOpened, setNewDataFileModalOpened] = useState(false);
 	const [currentLoadedDataFilePath, setCurrentLoadedDataFilePath] = useState<
 		string | null
 	>(null);
@@ -51,7 +55,6 @@ export default function DataSettings() {
 	const folderSelectRef = useRef<HTMLInputElement>(null);
 
 	const navigate = useNavigate();
-	const modals = useModals();
 
 	useEffect(() => {
 		setCurrentLoadedDataFilePath(localStorage.getItem('dataFilePath'));
@@ -63,6 +66,76 @@ export default function DataSettings() {
 			folderSelectRef.current.setAttribute('webkitdirectory', '');
 		}
 	}, [folderSelectRef]);
+
+	function onNewDataFileModalConfirm() {
+		if (
+			password &&
+			password.length >= 8 // TODO: Fix password sometimes not more than 8 characters for some reason
+		) {
+			let newFileName = newDataFileName || 'data_file';
+
+			while (fs.existsSync(`${newDataFilePath}\\${newFileName}.txt`)) {
+				newFileName += '_1';
+			}
+
+			const newFullFilePath = `${newDataFilePath}\\${newFileName}.txt`;
+
+			const jsonContent = JSON.stringify({
+				verification: 'verify_me',
+			});
+
+			const cryptr = new Cryptr(password);
+
+			const encryptedString = cryptr.encrypt(jsonContent);
+
+			fs.open(newFullFilePath, 'w', () => {});
+
+			fs.writeFile(newFullFilePath, encryptedString, () => {});
+
+			localStorage.setItem('dataFilePath', newFullFilePath);
+			setCurrentLoadedDataFilePath(newFullFilePath);
+			showNotification({
+				autoClose: 5000,
+				title: 'Successfully initialized and set data file.',
+				message: `Data file path is now set to: ${newFullFilePath}. Please proceed to logging in`,
+				color: 'green',
+				icon: <Icon icon="carbon:checkmark-filled" />,
+				loading: false,
+			});
+			navigate(-1);
+		} else {
+			showNotification({
+				autoClose: 5000,
+				title: 'Password must be at least 8 characters long',
+				message: `Please choose a longer password`,
+				color: 'red',
+				icon: <Icon icon="carbon:warning-alt" />,
+				loading: false,
+			});
+		}
+
+		return (
+			<div>
+				<TextInput
+					label="Data file name"
+					placeholder="Leave empty for default (data_file)"
+					value={newDataFileName}
+					onChange={(e) => setNewDataFileName(e.currentTarget.value)}
+				/>
+				<PasswordInput
+					label="Password for data file"
+					description="Please choose a password you can remember, there is no way
+														to recover a data file's contents without it's password"
+					placeholder="Password must be at least 8 characters long"
+					required
+					value={password}
+					onChange={(e) => {
+						setPassword(e.currentTarget.value);
+					}}
+				/>
+			</div>
+		);
+	}
 
 	return (
 		<div className="flex h-screen flex-col">
@@ -143,9 +216,6 @@ export default function DataSettings() {
 							variant="outline"
 							color="grape"
 							onClick={() => {
-								// if (folderSelectRef !== null) {
-								// 	folderSelectRef?.current?.click();
-								// }
 								// eslint-disable-next-line promise/catch-or-return
 								dialog
 									.showOpenDialog({
@@ -162,120 +232,7 @@ export default function DataSettings() {
 										setNewDataFilePath(res.filePaths[0]);
 										setNewDataFileName('');
 										setPassword('');
-										modals.openConfirmModal({
-											title: 'Create a new data file',
-											children: (
-												<div>
-													<TextInput
-														label="Data file name"
-														placeholder="Leave empty for default (data_file)"
-														onChange={(e) =>
-															setNewDataFileName(
-																e.currentTarget
-																	.value
-															)
-														}
-													/>
-													<PasswordInput
-														label="Password for data file"
-														description="Please choose a password you can remember, there is no way
-														to recover a data file's contents without it's password"
-														placeholder="Password must be at least 8 characters long"
-														required
-														onChange={(e) => {
-															setPassword(
-																e.currentTarget
-																	.value
-															);
-														}}
-													/>
-												</div>
-											),
-											labels: {
-												confirm: 'Confirm',
-												cancel: 'Cancel',
-											},
-											confirmProps: {
-												variant: 'light',
-											},
-											onConfirm() {
-												if (
-													password &&
-													password.length >= 8 // TODO: Fix password sometimes not more than 8 characters for some reason
-												) {
-													let newFileName =
-														newDataFileName ||
-														'data_file';
-
-													while (
-														fs.existsSync(
-															`${newDataFilePath}\\${newFileName}.txt`
-														)
-													) {
-														newFileName += '_1';
-													}
-
-													const newFullFilePath = `${newDataFilePath}\\${newFileName}.txt`;
-
-													const jsonContent =
-														JSON.stringify({
-															verification:
-																'verify_me',
-														});
-
-													const cryptr = new Cryptr(
-														password
-													);
-
-													const encryptedString =
-														cryptr.encrypt(
-															jsonContent
-														);
-
-													fs.open(
-														newFullFilePath,
-														'w',
-														() => {}
-													);
-
-													fs.writeFile(
-														newFullFilePath,
-														encryptedString,
-														() => {}
-													);
-
-													localStorage.setItem(
-														'dataFilePath',
-														newFullFilePath
-													);
-													setCurrentLoadedDataFilePath(
-														newFullFilePath
-													);
-													showNotification({
-														autoClose: 5000,
-														title: 'Successfully initialized and set data file.',
-														message: `Data file path is now set to: ${newFullFilePath}. Please proceed to logging in`,
-														color: 'green',
-														icon: (
-															<Icon icon="carbon:checkmark-filled" />
-														),
-														loading: false,
-													});
-													navigate(-1);
-												} else {
-													showNotification({
-														autoClose: 5000,
-														title: 'Password must be at least 8 characters long',
-														message: `Please choose a longer password`,
-														color: 'red',
-														icon: (
-															<Icon icon="carbon:warning-alt" />
-														),
-														loading: false,
-													});
-												}
-											},
-										});
+										setNewDataFileModalOpened(true);
 									});
 							}}
 						>
@@ -284,6 +241,49 @@ export default function DataSettings() {
 					</div>
 				</div>
 			</div>
+			<Modal
+				opened={newDataFileModalOpened}
+				onClose={() => setNewDataFileModalOpened(false)}
+				title="Create a new data file"
+			>
+				<div>
+					<TextInput
+						label="Data file name"
+						placeholder="Leave empty for default name (data_file)"
+						value={newDataFileName}
+						onChange={(e) =>
+							setNewDataFileName(e.currentTarget.value)
+						}
+					/>
+					<PasswordInput
+						label="Password for data file"
+						description="Please choose a password you can remember, there is no way
+									to recover a data file's contents without it's password"
+						placeholder="Password must be at least 8 characters long"
+						required
+						value={password}
+						onChange={(e) => {
+							setPassword(e.currentTarget.value);
+						}}
+					/>
+					<div className="mt-5 flex justify-end space-x-3">
+						<Button
+							variant="light"
+							color="gray"
+							onClick={() => setNewDataFileModalOpened(false)}
+						>
+							Cancel
+						</Button>
+						<Button
+							variant="outline"
+							color="grape"
+							onClick={() => onNewDataFileModalConfirm()}
+						>
+							Confirm
+						</Button>
+					</div>
+				</div>
+			</Modal>
 			<input
 				type="file"
 				ref={folderSelectRef}
