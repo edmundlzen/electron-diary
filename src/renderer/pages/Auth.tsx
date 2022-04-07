@@ -5,6 +5,8 @@ import Cryptr from 'cryptr';
 import fs from 'fs';
 import { showNotification } from '@mantine/notifications';
 import { Icon } from '@iconify/react';
+// eslint-disable-next-line import/no-cycle
+import { useGlobalState } from '../App';
 
 export const dropzoneChildren = () => (
 	<Group
@@ -24,6 +26,9 @@ export default function Auth() {
 	const [dataFilePath, setDataFilePath] = useState<string | null>(null);
 	const [dataFileContent, setDataFileContent] = useState<string | null>(null);
 	const [password, setPassword] = useState<string>('');
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	// @ts-ignore
+	const [state, dispatch] = useGlobalState();
 	const navigate = useNavigate();
 
 	useEffect(() => {
@@ -51,6 +56,17 @@ export default function Auth() {
 				if (decryptedStringJson.verification !== 'verify_me') {
 					throw new Error('Invalid password');
 				}
+
+				showNotification({
+					autoClose: 5000,
+					title: 'Successfully unlocked data file',
+					message: 'Welcome back!',
+					color: 'green',
+					icon: <Icon icon="carbon:checkmark-filled" />,
+					loading: false,
+				});
+				dispatch({ data: decryptedStringJson });
+				navigate('/');
 			} catch (e) {
 				showNotification({
 					autoClose: 5000,
