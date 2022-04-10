@@ -1,4 +1,4 @@
-import { Overlay, Paper, Text } from '@mantine/core';
+import { Button, Overlay, Paper, Text } from '@mantine/core';
 import { Icon } from '@iconify/react';
 // eslint-disable-next-line import/no-cycle
 import { useNavigate } from 'react-router-dom';
@@ -18,7 +18,9 @@ function MenuItem(props: {
 		<Paper
 			shadow="sm"
 			className={`flex items-center justify-center flex-col p-4 transition-all w-60 h-60 relative${
-				disabled ? ' cursor-not-allowed' : ' hover:bg-zinc-100'
+				disabled
+					? ' cursor-not-allowed'
+					: ' hover:bg-zinc-100 cursor-pointer'
 			}`}
 			withBorder
 			onClick={onClick}
@@ -45,8 +47,19 @@ export default function Home() {
 	const navigate = useNavigate();
 
 	return (
-		<div className="p-10 flex justify-center">
-			<div className="select-none flex space-x-5">
+		<div className="p-10 flex justify-center flex-col">
+			<div className="mb-5 flex justify-end">
+				<Button
+					variant="outline"
+					onClick={() => {
+						dispatch({ data: null, password: null });
+						navigate('/auth');
+					}}
+				>
+					Log out
+				</Button>
+			</div>
+			<div className="select-none flex gap-x-5">
 				<MenuItem
 					icon="uil:diary"
 					title="Journal"

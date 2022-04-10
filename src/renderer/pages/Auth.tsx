@@ -39,7 +39,30 @@ export default function Auth() {
 		if (dataFilePath) {
 			fs.readFile(dataFilePath, 'utf-8', (err, data) => {
 				if (err) {
-					console.error(err);
+					if (err.code === 'ENOENT') {
+						showNotification({
+							autoClose: 10000,
+							title: 'Error',
+							message: `File ${dataFilePath} not found`,
+							color: 'red',
+							icon: <Icon icon="carbon:warning-alt" />,
+							loading: false,
+							disallowClose: true,
+						});
+						localStorage.removeItem('dataFilePath');
+						setDataFilePath(null);
+					} else {
+						showNotification({
+							autoClose: 10000,
+							title: 'Error',
+							message:
+								'An unknown error occurred while reading the file',
+							color: 'red',
+							icon: <Icon icon="carbon:warning-alt" />,
+							loading: false,
+							disallowClose: true,
+						});
+					}
 				} else {
 					setDataFileContent(data);
 				}
@@ -71,7 +94,7 @@ export default function Auth() {
 					icon: <Icon icon="carbon:checkmark-filled" />,
 					loading: false,
 				});
-				dispatch({ data: decryptedStringJson });
+				dispatch({ data: decryptedStringJson, password });
 				navigate('/');
 			} catch (e) {
 				showNotification({
