@@ -47,6 +47,12 @@ export default function Auth() {
 		}
 	}, [dataFilePath]);
 
+	useEffect(() => {
+		if (state.data) {
+			navigate('/');
+		}
+	}, [state]);
+
 	function handleUnlockButtonClick() {
 		if (dataFileContent) {
 			try {

@@ -11,6 +11,7 @@ import Auth from './pages/Auth';
 import DataSettings from './pages/DataSettings';
 import ProtectedRoute from './components/ProtectedRoute';
 import Home from './pages/Home';
+import Journal from './pages/Journal';
 
 const defaultGlobalState = {
 	data: null,
@@ -46,8 +47,12 @@ export default function App() {
 					<GlobalStateProvider>
 						<Router>
 							<Routes>
-								<Route element={<ProtectedRoute />}>
+								<Route path="/" element={<ProtectedRoute />}>
 									<Route index element={<Home />} />
+									<Route
+										path="journal"
+										element={<Journal />}
+									/>
 								</Route>
 								<Route path="auth" element={<Auth />} />
 								<Route
